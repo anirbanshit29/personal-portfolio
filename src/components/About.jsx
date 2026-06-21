@@ -1,163 +1,128 @@
-import { motion } from 'framer-motion'
-import { GraduationCap, Code, Zap, Rocket } from 'lucide-react'
+import { motion, useInView } from 'framer-motion'
 
-const TIMELINE = [
-  {
-    icon: GraduationCap,
-    color: 'text-accent-cyan',
-    bg: 'bg-accent-cyan/10',
-    border: 'border-accent-cyan/20',
-    title: 'B.Tech Computer Science Engineering',
-    sub: 'Jalpaiguri Government Engineering College · Batch of 2028',
-    desc: 'Pursuing CSE with focus on software development, algorithms, and emerging technologies.',
-  },
-  {
-    icon: Code,
-    color: 'text-accent-blue',
-    bg: 'bg-accent-blue/10',
-    border: 'border-accent-blue/20',
-    title: 'Full-Stack Web Development',
-    sub: 'HTML · CSS · JavaScript · React · Node.js · MongoDB',
-    desc: 'Building responsive, modern web applications end-to-end. Always learning new frameworks and best practices.',
-  },
-  {
-    icon: Rocket,
-    color: 'text-accent-pink',
-    bg: 'bg-accent-pink/10',
-    border: 'border-accent-pink/20',
-    title: 'Building Real-World Projects',
-    sub: 'Portfolio · DSA Tracker · Alcohol Delivery Platform',
-    desc: 'Applying skills by shipping complete applications — from design to deployment, focusing on clean code and great UX.',
-  },
+const f = (delay = 0) => ({
+  initial: { opacity: 0, y: 16 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-60px' },
+  transition: { duration: 0.65, delay, ease: [0.22, 1, 0.36, 1] },
+})
+
+const QUICK_FACTS = [
+  { key: 'degree',   value: 'B.Tech CSE' },
+  { key: 'college',  value: 'JGEC · Batch 2028' },
+  { key: 'location', value: 'Kolkata, India' },
+  { key: 'focus',    value: 'Full-Stack Web Dev' },
+  { key: 'langs',    value: 'JS · C++ · HTML · CSS' },
+  { key: 'status',   value: 'Open to work' },
 ]
 
-const containerVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.15 } },
-}
-
-const itemVariants = {
-  hidden:  { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
-}
+const NOW = [
+  { label: 'Learning',   value: 'React, Node.js, Express, MongoDB' },
+  { label: 'Practicing', value: 'DSA on LeetCode & Codeforces' },
+  { label: 'Building',   value: 'Alcohol Delivery Platform' },
+  { label: 'Seeking',    value: 'Internship / Collaboration' },
+]
 
 export default function About() {
   return (
-    <section id="about" className="py-24 relative overflow-hidden">
-      {/* Background orb */}
-      <div className="orb w-[400px] h-[400px] bg-blue-700/8 top-0 right-[-100px]" />
+    <section id="about" className="section">
+      <div className="container-main">
 
-      <div className="max-w-6xl mx-auto px-5">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
-          <p className="text-accent-cyan text-sm font-semibold tracking-widest uppercase mb-3">Get to know me</p>
-          <h2 className="section-title text-4xl font-black">About Me</h2>
-          <div className="section-divider mx-auto mt-4" />
+        <motion.div {...f(0)} style={{ marginBottom: 48 }}>
+          <p className="section-label">about</p>
+          <h2 className="section-heading">Background</h2>
+          <hr className="hr" style={{ marginTop: 16, maxWidth: 80 }} />
         </motion.div>
 
-        <div className="grid lg:grid-cols-2 gap-12 items-start">
+        {/* Section orb */}
+        <div aria-hidden style={{ position: 'absolute', top: 0, right: -100, width: 400, height: 400, borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%)', filter: 'blur(40px)', pointerEvents: 'none', animation: 'orbitGlow 10s ease-in-out infinite' }} />
 
-          {/* Left: Intro */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true, margin: '-80px' }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        {/* ── Bio ── */}
+        <motion.div {...f(0.06)} style={{ marginBottom: 40 }}>
+          <p className="prose-body" style={{ marginBottom: 16 }}>
+            I'm a Computer Science student with a strong engineering mindset. I build
+            full-stack web applications end-to-end — from designing clean, responsive UIs
+            to architecting RESTful backends — and I take performance and code quality seriously.
+          </p>
+          <p className="prose-body">
+            My foundation in <span className="code-inline">C++</span> and{' '}
+            <span className="code-inline">DSA</span> keeps my problem-solving sharp.
+            I believe the best software is simple, fast, and reliable — and I obsess
+            over all three.
+          </p>
+        </motion.div>
+
+        {/* ── Quick facts grid ── */}
+        <motion.div {...f(0.12)} style={{ marginBottom: 40 }}>
+          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.6875rem', color: '#3F3F46', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>
+            // quick facts
+          </p>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+              gap: 1,
+              background: '#27272A',
+              border: '1px solid #27272A',
+              borderRadius: 10,
+              overflow: 'hidden',
+            }}
           >
-            <div className="glass-card p-8">
-              <p className="text-slate-300 leading-relaxed text-base mb-4">
-                Hi! I'm <span className="text-white font-semibold">Anirban Shit</span>, a passionate Computer
-                Science student at <span className="text-accent-cyan font-medium">Jalpaiguri Government Engineering College</span> (Batch of 2028).
-              </p>
-              <p className="text-slate-400 leading-relaxed text-base mb-4">
-                I'm on a journey to master Full-Stack Web Development while building real-world projects using modern
-                frameworks. My strong foundation in <span className="text-white">C++ and Data Structures & Algorithms</span> keeps
-                me sharp in problem solving — I regularly compete on LeetCode and Codeforces.
-              </p>
-              <p className="text-slate-400 leading-relaxed text-base mb-6">
-                I love turning ideas into real products — from crafting pixel-perfect UIs to
-                building robust backends. I'm always eager to{' '}
-                <span className="text-white">collaborate, contribute to open source</span>, and
-                grow as a developer by working on meaningful projects.
-              </p>
-
-              {/* Key traits */}
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: 'Team Player',       emoji: '🤝' },
-                  { label: 'Quick Learner',      emoji: '⚡' },
-                  { label: 'Problem Solver',     emoji: '🧩' },
-                  { label: 'Open Source Minded', emoji: '🌐' },
-                ].map(({ label, emoji }) => (
-                  <div
-                    key={label}
-                    className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-white/[0.03] border border-white/[0.05] text-slate-300 text-sm font-medium"
-                  >
-                    <span>{emoji}</span>
-                    {label}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Fun facts */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-              className="mt-4 glass-card p-6"
-            >
-              <h3 className="text-white font-semibold mb-4">Currently</h3>
-              <ul className="space-y-2.5">
-                {[
-                  { color: 'bg-accent-cyan',   text: 'Learning: React, Node.js, Express, MongoDB' },
-                  { color: 'bg-accent-blue',   text: 'Comfortable: C++, DSA, HTML, CSS, JavaScript' },
-                  { color: 'bg-accent-purple', text: 'Building: Alcohol Delivery Platform & more apps' },
-                  { color: 'bg-emerald-400',   text: 'Always open to internships & collaborations' },
-                ].map(({ color, text }) => (
-                  <li key={text} className="flex items-start gap-3 text-slate-400 text-sm">
-                    <span className={`w-2 h-2 rounded-full ${color} mt-1.5 shrink-0`} />
-                    {text}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          </motion.div>
-
-          {/* Right: Timeline */}
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, margin: '-80px' }}
-            className="space-y-4"
-          >
-            {TIMELINE.map(({ icon: Icon, color, bg, border, title, sub, desc }) => (
+            {QUICK_FACTS.map(({ key, value }, i) => (
               <motion.div
-                key={title}
-                variants={itemVariants}
-                className={`glass-card p-5 border ${border} group hover:scale-[1.02] transition-transform duration-300 shine`}
+                key={key}
+                initial={{ opacity: 0, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.4, delay: i * 0.06, ease: [0.22,1,0.36,1] }}
+                style={{
+                  background: '#09090B',
+                  padding: '14px 18px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 4,
+                  transition: 'background 0.15s ease',
+                  cursor: 'default',
+                }}
+                whileHover={{ backgroundColor: '#111113' }}
               >
-                <div className="flex items-start gap-4">
-                  <div className={`w-10 h-10 rounded-xl ${bg} border ${border} flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform duration-300`}>
-                    <Icon size={20} className={color} />
-                  </div>
-                  <div>
-                    <h3 className="text-white font-semibold text-sm mb-0.5">{title}</h3>
-                    <p className={`text-xs font-medium mb-2 ${color}`}>{sub}</p>
-                    <p className="text-slate-400 text-sm leading-relaxed">{desc}</p>
-                  </div>
-                </div>
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.625rem', color: '#3F3F46', letterSpacing: '0.08em', textTransform: 'uppercase' }}>{key}</span>
+                <span style={{ fontSize: '0.875rem', color: '#E4E4E7', fontWeight: 500, letterSpacing: '-0.02em' }}>{value}</span>
               </motion.div>
             ))}
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
+
+        {/* ── Right now ── */}
+        <motion.div {...f(0.18)}>
+          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.6875rem', color: '#3F3F46', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 16 }}>
+            // right now
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 0, border: '1px solid #27272A', borderRadius: 10, overflow: 'hidden' }}>
+            {NOW.map(({ label, value }, i) => (
+              <motion.div
+                key={label}
+                initial={{ opacity: 0, x: -14 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.45, delay: 0.18 + i * 0.07, ease: [0.22,1,0.36,1] }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'baseline',
+                  gap: 12,
+                  padding: '13px 18px',
+                  borderBottom: i < NOW.length - 1 ? '1px solid #18181B' : 'none',
+                  transition: 'background 0.15s ease',
+                }}
+                whileHover={{ backgroundColor: '#111113' }}
+              >
+                <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.6875rem', color: '#60A5FA', minWidth: 80, letterSpacing: '0.01em' }}>{label}</span>
+                <span style={{ fontSize: '0.875rem', color: '#71717A', letterSpacing: '-0.01em' }}>{value}</span>
+              </motion.div>
+            ))}
+          </div>
+        </motion.div>
+
       </div>
     </section>
   )

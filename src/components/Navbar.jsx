@@ -1,164 +1,103 @@
-import { useState, useEffect } from 'react'
-import { Moon, Sun, Menu, X, Code2 } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
 
-const NAV_LINKS = [
-  { label: 'Home',     href: '#home' },
-  { label: 'About',    href: '#about' },
-  { label: 'Skills',   href: '#skills' },
-  { label: 'Projects', href: '#projects' },
-  { label: 'Contact',  href: '#contact' },
+const LINKS = [
+  { label: 'about',    href: '#about' },
+  { label: 'skills',   href: '#skills' },
+  { label: 'projects', href: '#projects' },
+  { label: 'contact',  href: '#contact' },
 ]
 
-export default function Navbar({ theme, toggleTheme }) {
-  const [scrolled, setScrolled]   = useState(false)
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [activeSection, setActive] = useState('home')
+export default function Navbar() {
+  const [scrolled, setScrolled] = useState(false)
+  const [active,   setActive]   = useState('home')
+  const [open,     setOpen]     = useState(false)
 
-  // Shrink nav on scroll
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 40)
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+    const fn = () => setScrolled(window.scrollY > 20)
+    window.addEventListener('scroll', fn, { passive: true })
+    return () => window.removeEventListener('scroll', fn)
   }, [])
 
-  // Active section tracking
   useEffect(() => {
-    const ids = NAV_LINKS.map(l => l.href.slice(1))
-    const observer = new IntersectionObserver(
-      entries => {
-        entries.forEach(e => { if (e.isIntersecting) setActive(e.target.id) })
-      },
+    const ids = ['home', 'about', 'skills', 'projects', 'contact']
+    const obs = new IntersectionObserver(
+      entries => entries.forEach(e => e.isIntersecting && setActive(e.target.id)),
       { rootMargin: '-40% 0px -55% 0px' }
     )
-    ids.forEach(id => {
-      const el = document.getElementById(id)
-      if (el) observer.observe(el)
-    })
-    return () => observer.disconnect()
+    ids.forEach(id => { const el = document.getElementById(id); if (el) obs.observe(el) })
+    return () => obs.disconnect()
   }, [])
 
-  // Close mobile nav on resize
-  useEffect(() => {
-    const onResize = () => { if (window.innerWidth >= 768) setMobileOpen(false) }
-    window.addEventListener('resize', onResize)
-    return () => window.removeEventListener('resize', onResize)
-  }, [])
-
-  const scrollTo = (href) => {
-    const el = document.querySelector(href)
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    setMobileOpen(false)
+  const go = href => {
+    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth' })
+    setOpen(false)
   }
 
   return (
-    <>
-      <header
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled
-            ? 'py-2 bg-dark-900/80 backdrop-blur-xl border-b border-white/[0.05] shadow-lg'
-            : 'py-4 bg-transparent'
-        }`}
-      >
-        <div className="max-w-6xl mx-auto px-5 flex items-center gap-4">
-          {/* Logo */}
-          <a
-            href="#home"
-            onClick={e => { e.preventDefault(); scrollTo('#home') }}
-            className="flex items-center gap-2 text-white font-bold text-lg tracking-tight group"
-          >
-            <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-dark-900 shadow-glow-cyan group-hover:shadow-glow-blue transition-all duration-300">
-              <Code2 size={16} strokeWidth={2.5} />
-            </span>
-            <span className="gradient-text">Anirban<span className="text-white/40">.</span></span>
-          </a>
-
-          {/* Desktop nav links */}
-          <nav className="hidden md:flex items-center gap-1 ml-auto">
-            {NAV_LINKS.map(({ label, href }) => (
-              <button
-                key={label}
-                onClick={() => scrollTo(href)}
-                className={`nav-link transition-all duration-200 ${
-                  activeSection === href.slice(1) ? 'active' : ''
-                }`}
-              >
-                {label}
-                {activeSection === href.slice(1) && (
-                  <span className="absolute bottom-0.5 left-3 right-3 h-0.5 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full" />
-                )}
-              </button>
-            ))}
-          </nav>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2 ml-3 md:ml-0">
-            {/* Theme toggle */}
-            <button
-              onClick={toggleTheme}
-              aria-label="Toggle theme"
-              className="w-9 h-9 rounded-lg border border-white/[0.08] bg-white/[0.03] flex items-center justify-center text-slate-400 hover:text-white hover:border-white/20 transition-all duration-200"
-            >
-              {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-            </button>
-
-            {/* Resume CTA */}
-            <a
-              href="/resume.pdf"
-              download
-              className="hidden md:flex btn-primary text-xs px-4 py-2"
-            >
-              Resume
-            </a>
-
-            {/* Mobile hamburger */}
-            <button
-              onClick={() => setMobileOpen(o => !o)}
-              aria-label="Toggle menu"
-              className="md:hidden w-9 h-9 rounded-lg border border-white/[0.08] bg-white/[0.03] flex items-center justify-center text-slate-400 hover:text-white transition-all duration-200"
-            >
-              {mobileOpen ? <X size={18} /> : <Menu size={18} />}
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* Mobile menu */}
+    <header
+      style={{
+        position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+        background: scrolled ? 'rgba(9,9,11,0.9)' : 'transparent',
+        backdropFilter: scrolled ? 'blur(20px)' : 'none',
+        WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none',
+        borderBottom: scrolled ? '1px solid #27272A' : '1px solid transparent',
+        transition: 'all 0.25s ease',
+      }}
+    >
       <div
-        className={`fixed inset-0 z-40 md:hidden transition-all duration-300 ${
-          mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
-        }`}
+        className="container-main"
+        style={{ display: 'flex', alignItems: 'center', height: 60 }}
       >
-        {/* Backdrop */}
-        <div
-          className="absolute inset-0 bg-dark-900/60 backdrop-blur-sm"
-          onClick={() => setMobileOpen(false)}
-        />
-        {/* Drawer */}
-        <div
-          className={`absolute top-0 right-0 h-full w-72 bg-dark-800/95 backdrop-blur-xl border-l border-white/[0.06] p-6 pt-20 flex flex-col gap-2 transition-transform duration-300 ${
-            mobileOpen ? 'translate-x-0' : 'translate-x-full'
-          }`}
+        {/* Logo */}
+        <button
+          onClick={() => go('#home')}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8, padding: 0 }}
         >
-          {NAV_LINKS.map(({ label, href }) => (
+          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.9rem', fontWeight: 600, color: '#FAFAFA', letterSpacing: '-0.02em' }}>
+            <span style={{ color: '#3F3F46' }}>~/</span>anirban
+          </span>
+        </button>
+
+        {/* Desktop nav */}
+        <nav style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 28 }} className="hidden md:flex">
+          {LINKS.map(({ label, href }) => (
             <button
               key={label}
-              onClick={() => scrollTo(href)}
-              className={`text-left px-4 py-3 rounded-xl font-medium transition-all duration-200 ${
-                activeSection === href.slice(1)
-                  ? 'bg-accent-cyan/10 text-accent-cyan border border-accent-cyan/20'
-                  : 'text-slate-400 hover:text-white hover:bg-white/[0.05]'
-              }`}
+              onClick={() => go(href)}
+              className={`nav-item${active === href.slice(1) ? ' active' : ''}`}
+              style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem' }}
             >
               {label}
             </button>
           ))}
-          <div className="mt-4">
-            <a href="/resume.pdf" download className="btn-primary justify-center w-full">
-              Download Resume
-            </a>
-          </div>
-        </div>
+          <a href="/resume.pdf" download className="btn-primary" style={{ padding: '7px 16px', fontSize: '0.8125rem' }}>
+            resume.pdf
+          </a>
+        </nav>
+
+        {/* Mobile hamburger */}
+        <button
+          onClick={() => setOpen(o => !o)}
+          className="md:hidden"
+          style={{ marginLeft: 'auto', background: 'none', border: '1px solid #27272A', borderRadius: 6, padding: '6px 10px', color: '#71717A', cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem' }}
+        >
+          {open ? 'close' : 'menu'}
+        </button>
       </div>
-    </>
+
+      {/* Mobile menu */}
+      {open && (
+        <div style={{ background: '#09090B', borderBottom: '1px solid #27272A', padding: '16px 24px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {LINKS.map(({ label, href }) => (
+            <button key={label} onClick={() => go(href)} className="nav-item" style={{ textAlign: 'left', padding: '10px 0', borderBottom: '1px solid #18181B', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.8rem' }}>
+              {label}
+            </button>
+          ))}
+          <a href="/resume.pdf" download className="btn-primary" style={{ marginTop: 12, justifyContent: 'center' }}>
+            resume.pdf
+          </a>
+        </div>
+      )}
+    </header>
   )
 }

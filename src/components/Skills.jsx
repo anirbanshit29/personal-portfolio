@@ -1,194 +1,168 @@
-import { useRef, useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
+import { useEffect, useRef, useState } from 'react'
+import { motion, useInView } from 'framer-motion'
 
-const SKILL_CATEGORIES = [
-  {
-    category: 'Languages',
-    color: 'from-blue-500 to-cyan-500',
-    glow: 'shadow-glow-cyan',
-    skills: [
-      { name: 'C++',        level: 85, icon: '⚙️' },
-      { name: 'JavaScript', level: 75, icon: '🟨' },
-      { name: 'HTML',       level: 92, icon: '🧱' },
-      { name: 'CSS',        level: 88, icon: '🎨' },
-    ],
-  },
-  {
-    category: 'Frameworks & Libraries',
-    color: 'from-purple-500 to-pink-500',
-    glow: 'shadow-glow-blue',
-    skills: [
-      { name: 'React',     level: 70, icon: '⚛️' },
-      { name: 'Node.js',   level: 60, icon: '🟩' },
-      { name: 'Express',   level: 55, icon: '🚀' },
-      { name: 'Tailwind',  level: 75, icon: '💨' },
-    ],
-  },
-  {
-    category: 'CS Fundamentals',
-    color: 'from-yellow-500 to-orange-500',
-    glow: '',
-    skills: [
-      { name: 'Data Structures & Algorithms', level: 80, icon: '🧩' },
-      { name: 'Object Oriented Programming',  level: 78, icon: '🏗️' },
-      { name: 'Database Management System',   level: 65, icon: '🗄️' },
-      { name: 'Operating System',             level: 70, icon: '💻' },
-    ],
-  },
-
-]
-
-const ALL_PILLS = [
-  'C++', 'JavaScript', 'HTML', 'CSS', 'React', 'Node.js',
-  'Express', 'MongoDB', 'Tailwind CSS', 'DSA', 'Git', 'GitHub',
-  'OOP', 'REST APIs', 'VS Code', 'Responsive Design',
-]
-
-function SkillBar({ name, level, icon, gradient, delay }) {
-  const barRef = useRef(null)
-  const [animated, setAnimated] = useState(false)
+/* ── Count-up hook ───────────────────────────────────────────── */
+function useCountUp(target, duration = 1400) {
+  const [val, setVal] = useState(0)
+  const ref = useRef(null)
+  const inView = useInView(ref, { once: true })
 
   useEffect(() => {
-    const el = barRef.current
-    if (!el) return
-    const observer = new IntersectionObserver(
-      ([entry]) => { if (entry.isIntersecting) setAnimated(true) },
-      { threshold: 0.5 }
-    )
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
+    if (!inView) return
+    const isNum = /^\d+/.test(target)
+    if (!isNum) { setVal(target); return }
+    const num = parseInt(target)
+    const plus = target.includes('+')
+    let start = 0
+    const step = Math.ceil(num / (duration / 16))
+    const id = setInterval(() => {
+      start += step
+      if (start >= num) { start = num; clearInterval(id) }
+      setVal(start + (plus ? '+' : ''))
+    }, 16)
+    return () => clearInterval(id)
+  }, [inView, target, duration])
+
+  return [ref, val]
+}
+
+/* ── Staggered group reveal ──────────────────────────────────── */
+const groupContainer = {
+  hidden: {},
+  show: { transition: { staggerChildren: 0.045 } },
+}
+const tagItem = {
+  hidden: { opacity: 0, scale: 0.85, y: 8 },
+  show:   { opacity: 1, scale: 1,    y: 0, transition: { duration: 0.35, ease: [0.22,1,0.36,1] } },
+}
+
+const GROUPS = [
+  { label: 'languages',               items: ['C++', 'JavaScript (ES2024)', 'HTML5', 'CSS3'] },
+  { label: 'frameworks & libraries',  items: ['React', 'Node.js', 'Express.js', 'Tailwind CSS'] },
+  { label: 'cs fundamentals',         items: ['Data Structures & Algorithms', 'Object Oriented Programming', 'Database Management System', 'Operating System'] },
+  { label: 'tools & platforms',       items: ['Git', 'GitHub', 'MongoDB', 'REST APIs', 'VS Code', 'Responsive Web Design'] },
+]
+
+const STATS = [
+  { raw: '2',    label: 'Projects' },
+  { raw: '500+', label: 'Connections' },
+  { raw: '2+',   label: 'Yrs Coding' },
+  { raw: 'CSE',  label: 'Major' },
+]
+
+/* ── Stat card with count-up ─────────────────────────────────── */
+function StatCard({ raw, label }) {
+  const [ref, val] = useCountUp(raw)
+  const [hov, setHov] = useState(false)
 
   return (
-    <div ref={barRef} className="group">
-      <div className="flex items-center justify-between mb-2">
-        <span className="flex items-center gap-2 text-sm font-medium text-slate-300 group-hover:text-white transition-colors">
-          <span>{icon}</span>
-          {name}
-        </span>
-        <span className="text-xs font-semibold text-slate-500 group-hover:text-slate-300 transition-colors">
-          {level}%
-        </span>
-      </div>
-      <div className="h-2 bg-white/[0.05] rounded-full overflow-hidden border border-white/[0.04]">
-        <div
-          className={`h-full rounded-full bg-gradient-to-r ${gradient} transition-all duration-1000 ease-out`}
-          style={{
-            width: animated ? `${level}%` : '0%',
-            transitionDelay: `${delay}ms`,
-            boxShadow: animated ? `0 0 8px rgba(96,165,250,0.4)` : 'none',
-          }}
-        />
-      </div>
+    <div
+      ref={ref}
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      style={{
+        background: hov ? '#111113' : '#09090B',
+        padding: '22px 16px',
+        textAlign: 'center',
+        transition: 'background 0.2s ease',
+        cursor: 'default',
+      }}
+    >
+      <p style={{
+        fontFamily: 'JetBrains Mono, monospace',
+        fontSize: '1.5rem', fontWeight: 700,
+        color: hov ? '#60A5FA' : '#FAFAFA',
+        letterSpacing: '-0.04em', marginBottom: 5,
+        transition: 'color 0.2s ease',
+      }}>
+        {val || raw}
+      </p>
+      <p style={{ fontSize: '0.6875rem', color: '#3F3F46', fontWeight: 500, letterSpacing: '0.04em', textTransform: 'uppercase' }}>{label}</p>
     </div>
   )
 }
 
-const containerVariants = {
-  hidden: {},
-  visible: { transition: { staggerChildren: 0.1 } },
-}
-
-const cardVariants = {
-  hidden:  { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
-}
+const f = (delay = 0) => ({
+  initial: { opacity: 0, y: 18 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-60px' },
+  transition: { duration: 0.65, delay, ease: [0.22, 1, 0.36, 1] },
+})
 
 export default function Skills() {
   return (
-    <section id="skills" className="py-24 relative overflow-hidden">
-      <div className="orb w-[500px] h-[500px] bg-purple-700/8 bottom-0 left-[-100px]" />
+    <section id="skills" className="section">
+      <div className="container-main">
 
-      <div className="max-w-6xl mx-auto px-5">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: '-80px' }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
-        >
-          <p className="text-accent-cyan text-sm font-semibold tracking-widest uppercase mb-3">What I work with</p>
-          <h2 className="section-title text-4xl font-black">Skills & Tech Stack</h2>
-          <div className="section-divider mx-auto mt-4" />
+        <motion.div {...f(0)} style={{ marginBottom: 48 }}>
+          <p className="section-label">skills</p>
+          <h2 className="section-heading">Tech Stack</h2>
+          <hr className="hr" style={{ marginTop: 16, maxWidth: 80 }} />
         </motion.div>
 
-        {/* Pills cloud */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="flex flex-wrap gap-2.5 justify-center mb-16"
-        >
-          {ALL_PILLS.map((pill, i) => (
-            <motion.span
-              key={pill}
-              initial={{ opacity: 0, scale: 0.8 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.04, duration: 0.4 }}
-              className="skill-pill"
-            >
-              {pill}
-            </motion.span>
-          ))}
-        </motion.div>
+        {/* Section orb */}
+        <div aria-hidden style={{ position: 'absolute', bottom: 0, left: -80, width: 360, height: 360, borderRadius: '50%', background: 'radial-gradient(circle, rgba(52,211,153,0.05) 0%, transparent 70%)', filter: 'blur(40px)', pointerEvents: 'none', animation: 'orbitGlow 12s ease-in-out infinite 3s' }} />
 
-        {/* Skill bar categories */}
-        <motion.div
-          variants={containerVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, margin: '-80px' }}
-          className="grid md:grid-cols-2 gap-6"
-        >
-          {SKILL_CATEGORIES.map(({ category, color, skills }) => (
-            <motion.div
-              key={category}
-              variants={cardVariants}
-              className="glass-card p-6 hover:border-white/10 transition-all duration-300 shine"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div className={`w-1 h-6 rounded-full bg-gradient-to-b ${color}`} />
-                <h3 className="text-white font-bold text-sm tracking-wide">{category}</h3>
-              </div>
-              <div className="space-y-4">
-                {skills.map(({ name, level, icon }, idx) => (
-                  <SkillBar
-                    key={name}
-                    name={name}
-                    level={level}
-                    icon={icon}
-                    gradient={color}
-                    delay={idx * 150}
-                  />
-                ))}
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
+        {/* ── Table layout ── */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 0, border: '1px solid #27272A', borderRadius: 12, overflow: 'hidden', marginBottom: 40 }}>
+          {GROUPS.map(({ label, items }, gi) => {
+            const rowRef = useRef(null)
+            const rowInView = useInView(rowRef, { once: true, margin: '-40px' })
+            return (
+              <motion.div
+                key={label}
+                ref={rowRef}
+                initial={{ opacity: 0, x: -16 }}
+                animate={rowInView ? { opacity: 1, x: 0 } : { opacity: 0, x: -16 }}
+                transition={{ duration: 0.55, delay: gi * 0.08, ease: [0.22,1,0.36,1] }}
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '160px 1fr',
+                  borderBottom: gi < GROUPS.length - 1 ? '1px solid #18181B' : 'none',
+                }}
+              >
+                {/* Label column */}
+                <div style={{ padding: '18px 20px', borderRight: '1px solid #18181B', display: 'flex', alignItems: 'flex-start', paddingTop: 20 }}>
+                  <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.6875rem', color: '#3F3F46', letterSpacing: '0.05em', textTransform: 'uppercase', lineHeight: 1.5 }}>
+                    {label}
+                  </span>
+                </div>
 
-        {/* Stats row */}
+                {/* Tags column — staggered */}
+                <motion.div
+                  variants={groupContainer}
+                  initial="hidden"
+                  animate={rowInView ? 'show' : 'hidden'}
+                  style={{ padding: '14px 18px', display: 'flex', flexWrap: 'wrap', gap: 6, alignContent: 'flex-start' }}
+                >
+                  {items.map(item => (
+                    <motion.span key={item} variants={tagItem} className="tag">{item}</motion.span>
+                  ))}
+                </motion.div>
+              </motion.div>
+            )
+          })}
+        </div>
+
+        {/* ── Stats with count-up ── */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8"
+          transition={{ duration: 0.6, delay: 0.2, ease: [0.22,1,0.36,1] }}
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(4, 1fr)',
+            gap: 1,
+            background: '#27272A',
+            border: '1px solid #27272A',
+            borderRadius: 10,
+            overflow: 'hidden',
+          }}
         >
-          {[
-            { num: '2',    label: 'Projects Built',   color: 'text-accent-cyan' },
-            { num: '500+', label: 'LinkedIn Connects', color: 'text-accent-blue' },
-            { num: '2+',   label: 'Years Coding',      color: 'text-accent-purple' },
-            { num: '∞',    label: 'Curiosity Level',   color: 'text-accent-pink' },
-          ].map(({ num, label, color }) => (
-            <div key={label} className="glass-card p-5 text-center group hover:scale-105 transition-transform duration-300">
-              <div className={`text-3xl font-black ${color} mb-1`}>{num}</div>
-              <div className="text-slate-400 text-xs font-medium">{label}</div>
-            </div>
-          ))}
+          {STATS.map(s => <StatCard key={s.label} {...s} />)}
         </motion.div>
+
       </div>
     </section>
   )

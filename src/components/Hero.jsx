@@ -1,314 +1,234 @@
-import { useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
-import { Download, MessageCircle, ArrowRight, MapPin, Users, Github, Linkedin } from 'lucide-react'
-import { useTypewriter } from '../hooks/useTypewriter'
+import { useEffect, useRef, useState } from 'react'
+import { motion, useInView } from 'framer-motion'
+import { Download, ArrowRight, Github, Linkedin } from 'lucide-react'
 
-const TYPED_ROLES = [
-  'Full-Stack Web Developer',
-]
-
-// Particle canvas component
-function ParticleCanvas() {
-  const canvasRef = useRef(null)
-
+/* ── Star particle canvas ────────────────────────────────────── */
+function StarCanvas() {
+  const ref = useRef(null)
   useEffect(() => {
-    const canvas = canvasRef.current
+    const canvas = ref.current
     if (!canvas) return
     const ctx = canvas.getContext('2d')
-    let animId
-    let particles = []
-
-    const resize = () => {
-      canvas.width  = canvas.offsetWidth
-      canvas.height = canvas.offsetHeight
-    }
+    let raf
+    const resize = () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight }
     resize()
     window.addEventListener('resize', resize)
 
-    class Particle {
-      constructor() { this.reset() }
-      reset() {
-        this.x  = Math.random() * canvas.width
-        this.y  = Math.random() * canvas.height
-        this.r  = Math.random() * 1.5 + 0.3
-        this.vx = (Math.random() - 0.5) * 0.3
-        this.vy = (Math.random() - 0.5) * 0.3
-        this.a  = Math.random() * 0.5 + 0.1
-      }
-      update() {
-        this.x += this.vx
-        this.y += this.vy
-        if (this.x < 0 || this.x > canvas.width || this.y < 0 || this.y > canvas.height) this.reset()
-      }
-      draw() {
-        ctx.beginPath()
-        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(96,165,250,${this.a})`
-        ctx.fill()
-      }
-    }
-
-    for (let i = 0; i < 80; i++) particles.push(new Particle())
+    const stars = Array.from({ length: 120 }, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      r: Math.random() * 1.2 + 0.2,
+      a: Math.random(),
+      speed: Math.random() * 0.003 + 0.002,
+      drift: (Math.random() - 0.5) * 0.12,
+    }))
 
     const draw = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
-      // Draw connecting lines
-      particles.forEach((p, i) => {
-        particles.slice(i + 1).forEach(q => {
-          const d = Math.hypot(p.x - q.x, p.y - q.y)
-          if (d < 100) {
-            ctx.beginPath()
-            ctx.moveTo(p.x, p.y)
-            ctx.lineTo(q.x, q.y)
-            ctx.strokeStyle = `rgba(96,165,250,${0.06 * (1 - d / 100)})`
-            ctx.lineWidth = 0.5
-            ctx.stroke()
-          }
-        })
-        p.update()
-        p.draw()
+      stars.forEach(s => {
+        s.a += s.speed
+        const alpha = (Math.sin(s.a) * 0.5 + 0.5) * 0.6
+        s.x += s.drift
+        if (s.x < 0) s.x = canvas.width
+        if (s.x > canvas.width) s.x = 0
+        ctx.beginPath()
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2)
+        ctx.fillStyle = `rgba(148,163,184,${alpha})`
+        ctx.fill()
       })
-      animId = requestAnimationFrame(draw)
+      raf = requestAnimationFrame(draw)
     }
     draw()
-
-    return () => {
-      window.removeEventListener('resize', resize)
-      cancelAnimationFrame(animId)
-    }
+    return () => { window.removeEventListener('resize', resize); cancelAnimationFrame(raf) }
   }, [])
-
-  return <canvas ref={canvasRef} id="particles-canvas" className="absolute inset-0 w-full h-full" />
+  return <canvas ref={ref} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }} />
 }
 
-export default function Hero() {
-  const typedText = useTypewriter(TYPED_ROLES, { speed: 75, deleteSpeed: 45, pause: 2200 })
+/* ── Typewriter code window ──────────────────────────────────── */
+const CODE_LINES = [
+  [{ t: 'const ',    c: 'token-keyword' }, { t: 'developer', c: 'token-prop' }, { t: ' = {', c: 'token-bracket' }],
+  [{ t: '  name',    c: 'token-prop' }, { t: ':      ', c: 'token-bracket' }, { t: '"Anirban Shit"',          c: 'token-string' }, { t: ',', c: 'token-bracket' }],
+  [{ t: '  role',    c: 'token-prop' }, { t: ':      ', c: 'token-bracket' }, { t: '"Full-Stack Developer"',  c: 'token-string' }, { t: ',', c: 'token-bracket' }],
+  [{ t: '  college', c: 'token-prop' }, { t: ':   ', c: 'token-bracket' }, { t: '"JGEC · CSE · 2028"',      c: 'token-string' }, { t: ',', c: 'token-bracket' }],
+  [{ t: '  stack',   c: 'token-prop' }, { t: ':     ', c: 'token-bracket' }, { t: '["React", "Node.js", "MongoDB"]', c: 'token-string' }, { t: ',', c: 'token-bracket' }],
+  [{ t: '  status',  c: 'token-prop' }, { t: ':   ', c: 'token-bracket' }, { t: '"open to opportunities"',  c: 'token-string' }],
+  [{ t: '}', c: 'token-bracket' }],
+  [],
+  [{ t: 'export default ', c: 'token-keyword' }, { t: 'developer', c: 'token-prop' }],
+]
+
+function CodeWindow() {
+  const ref    = useRef(null)
+  const inView = useInView(ref, { once: true })
+  const [lines, setLines] = useState(0)
+
+  useEffect(() => {
+    if (!inView) return
+    let i = 0
+    const id = setInterval(() => { i++; setLines(i); if (i >= CODE_LINES.length) clearInterval(id) }, 120)
+    return () => clearInterval(id)
+  }, [inView])
 
   return (
-    <section
-      id="home"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden hero-grid pt-20"
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 30, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.9, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      className="code-window"
     >
-      {/* Particles */}
-      <ParticleCanvas />
-
-      {/* Glowing orbs */}
-      <div className="orb w-[600px] h-[600px] bg-blue-600/10 top-[-100px] left-[-200px]" />
-      <div className="orb w-[500px] h-[500px] bg-cyan-500/8 bottom-[-50px] right-[-100px]" />
-      <div className="orb w-[300px] h-[300px] bg-purple-600/8 top-[30%] right-[15%]" />
-
-      <div className="relative z-10 max-w-6xl mx-auto px-5 py-16">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
-
-          {/* LEFT: Text content */}
-          <motion.div
-            initial={{ opacity: 0, x: -40 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="order-2 lg:order-1"
-          >
-            {/* Status badge */}
+      <div className="code-window-bar">
+        <div className="code-window-dot" style={{ background: '#FF5F57' }} />
+        <div className="code-window-dot" style={{ background: '#FFBD2E' }} />
+        <div className="code-window-dot" style={{ background: '#28C840' }} />
+        <span style={{ marginLeft: 10, fontSize: '0.6875rem', color: '#374151', fontFamily: 'JetBrains Mono, monospace' }}>developer.ts</span>
+      </div>
+      <div className="code-window-body" style={{ minHeight: 210 }}>
+        <pre style={{ margin: 0 }}>
+          {CODE_LINES.map((line, i) => (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.5 }}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-sm font-medium mb-6"
+              key={i}
+              initial={{ opacity: 0, x: -12 }}
+              animate={i < lines ? { opacity: 1, x: 0 } : { opacity: 0, x: -12 }}
+              transition={{ duration: 0.3, ease: 'easeOut' }}
+              style={{ minHeight: '1.75em', display: 'flex', alignItems: 'center', flexWrap: 'wrap' }}
             >
-              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse-slow" />
-              Open to Opportunities
+              {line.map((tok, j) => <span key={j} className={tok.c}>{tok.t}</span>)}
+              {i === lines - 1 && lines === CODE_LINES.length && (
+                <span style={{ color: '#60A5FA', animation: 'blink 1.1s step-end infinite' }}>|</span>
+              )}
             </motion.div>
+          ))}
+          {lines < CODE_LINES.length && (
+            <span style={{ color: '#60A5FA', animation: 'blink 0.6s step-end infinite' }}>|</span>
+          )}
+        </pre>
+      </div>
+    </motion.div>
+  )
+}
 
-            {/* Name */}
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-              className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-tight mb-3"
-            >
-              Hi, I'm{' '}
-              <span className="gradient-text block sm:inline">Anirban Shit</span>
-            </motion.h1>
+/* ── Stagger helpers ─────────────────────────────────────────── */
+const container = { hidden: {}, show: { transition: { staggerChildren: 0.1, delayChildren: 0.15 } } }
+const item = { hidden: { opacity: 0, y: 26, filter: 'blur(4px)' }, show: { opacity: 1, y: 0, filter: 'blur(0px)', transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] } } }
 
-            {/* Typewriter */}
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-              className="text-xl sm:text-2xl font-semibold text-slate-400 mb-4 h-8 flex items-center"
-            >
-              <span className="text-accent-cyan">{typedText}</span>
-              <span className="typewriter-cursor ml-0.5 text-accent-cyan">|</span>
-            </motion.div>
+export default function Hero() {
+  const scrollTo = id => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
 
-            {/* Description */}
-            <motion.p
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 0.6 }}
-              className="text-slate-400 text-base leading-relaxed mb-6 max-w-lg"
-            >
-              B.Tech CSE'28 @ Jalpaiguri Government Engineering College. Building full-stack web
-              applications with modern frameworks, solving DSA problems, and shipping
-              real-world products that make an impact.
-            </motion.p>
+  return (
+    <section id="home" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', position: 'relative', overflow: 'hidden' }}>
+      {/* Stars */}
+      <StarCanvas />
 
-            {/* Badges */}
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.55, duration: 0.6 }}
-              className="flex flex-wrap gap-3 mb-8"
-            >
-              <span className="badge">
-                <Users size={13} />
-                500+ LinkedIn Connections
-              </span>
-              <span className="badge">
-                <MapPin size={13} />
-                Kolkata, West Bengal, India
-              </span>
-            </motion.div>
+      {/* Hero glow behind heading */}
+      <motion.div
+        aria-hidden
+        animate={{ opacity: [0.6, 1, 0.6], scale: [1, 1.12, 1] }}
+        transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+        style={{
+          position: 'absolute', top: '20%', left: '50%', transform: 'translate(-50%,-50%)',
+          width: 800, height: 500, pointerEvents: 'none',
+          background: 'radial-gradient(ellipse, rgba(96,165,250,0.08) 0%, rgba(139,92,246,0.05) 40%, transparent 70%)',
+        }}
+      />
 
-            {/* CTA Buttons */}
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.65, duration: 0.6 }}
-              className="flex flex-wrap gap-3 mb-8"
-            >
-              <a href="/resume.pdf" download className="btn-primary shine">
-                <Download size={16} />
-                Download Resume
-              </a>
-              <button
-                onClick={() => document.querySelector('#contact')?.scrollIntoView({ behavior: 'smooth' })}
-                className="btn-secondary"
-              >
-                <MessageCircle size={16} />
-                Get in Touch
-              </button>
-              <button
-                onClick={() => document.querySelector('#projects')?.scrollIntoView({ behavior: 'smooth' })}
-                className="btn-outline"
-              >
-                View Projects
-                <ArrowRight size={16} />
-              </button>
-            </motion.div>
+      <div className="container-main" style={{ position: 'relative', zIndex: 2, paddingTop: 130, paddingBottom: 80 }}>
 
-            {/* Social links */}
-            <motion.div
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.75, duration: 0.6 }}
-              className="flex items-center gap-4"
-            >
-              <a
-                href="https://github.com/anirbanshit"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-slate-400 hover:text-white text-sm transition-colors duration-200"
-              >
-                <Github size={18} />
-                GitHub
-              </a>
-              <span className="w-px h-4 bg-white/10" />
-              <a
-                href="https://www.linkedin.com/in/anirbanshit"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 text-slate-400 hover:text-accent-blue text-sm transition-colors duration-200"
-              >
-                <Linkedin size={18} />
-                LinkedIn
-              </a>
-            </motion.div>
+        {/* ── Text block ── */}
+        <motion.div variants={container} initial="hidden" animate="show" style={{ maxWidth: 680, marginBottom: 48 }}>
+
+          {/* Status */}
+          <motion.div variants={item} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 28 }}>
+            <span className="status-dot" />
+            <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.6875rem', color: '#52525B', letterSpacing: '0.06em' }}>
+              available · open to opportunities
+            </span>
           </motion.div>
 
-          {/* RIGHT: Avatar card */}
-          <motion.div
-            initial={{ opacity: 0, x: 40 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
-            className="order-1 lg:order-2 flex justify-center"
+          {/* Animated gradient name */}
+          <motion.h1
+            variants={item}
+            style={{
+              fontSize: 'clamp(2.8rem, 7vw, 4.8rem)',
+              fontWeight: 900, letterSpacing: '-0.06em', lineHeight: 1.04,
+              marginBottom: 12,
+            }}
           >
-            <div className="relative">
-              {/* Outer glow ring */}
-              <div
-                className="absolute inset-[-12px] rounded-full opacity-60"
-                style={{
-                  background: 'conic-gradient(from 0deg, #60a5fa, #06b6d4, #a78bfa, #60a5fa)',
-                  animation: 'spin 8s linear infinite',
-                  filter: 'blur(8px)',
-                }}
-              />
+            <span className="gradient-name">Anirban Shit</span>
+          </motion.h1>
 
-              {/* Avatar container */}
-              <div
-                className="relative w-56 h-56 sm:w-64 sm:h-64 lg:w-72 lg:h-72 rounded-full overflow-hidden border-4 border-white/10 avatar-glow"
-                style={{ animation: 'float 6s ease-in-out infinite' }}
-              >
-                <img
-                  src="/assets/profile.jpg"
-                  alt="Anirban Shit"
-                  className="w-full h-full object-cover"
-                  onError={e => {
-                    // Fallback gradient avatar
-                    e.target.style.display = 'none'
-                    e.target.parentElement.style.background =
-                      'linear-gradient(135deg, #1e3a5f 0%, #0b2d59 50%, #0d1f3c 100%)'
-                    const initials = document.createElement('div')
-                    initials.style.cssText =
-                      'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:4rem;font-weight:900;color:#60a5fa;font-family:Inter,sans-serif;text-shadow:0 0 30px rgba(96,165,250,0.5)'
-                    initials.textContent = 'AS'
-                    e.target.parentElement.appendChild(initials)
-                  }}
-                />
-              </div>
+          {/* Role */}
+          <motion.p
+            variants={item}
+            style={{
+              fontFamily: 'JetBrains Mono, monospace',
+              fontSize: 'clamp(0.875rem, 2vw, 1.0625rem)',
+              letterSpacing: '0.01em', marginBottom: 22,
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}
+          >
+            <span style={{ color: '#4ADE80' }}>{'>'}</span>
+            <span style={{ color: '#60A5FA' }}>Full-Stack Web Developer</span>
+            <span style={{ color: '#374151', animation: 'blink 1.4s step-end infinite' }}>_</span>
+          </motion.p>
 
-              {/* Floating skill badges */}
-              <motion.div
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.9, type: 'spring', stiffness: 200 }}
-                className="absolute -bottom-4 -left-4 glass-card px-3 py-2 text-xs font-semibold text-accent-cyan flex items-center gap-1.5"
-              >
-                <span className="w-2 h-2 bg-accent-cyan rounded-full animate-pulse" />
-                C++ & DSA
-              </motion.div>
+          {/* Bio */}
+          <motion.p
+            variants={item}
+            style={{ fontSize: '0.9375rem', lineHeight: 1.8, color: '#52525B', letterSpacing: '-0.01em', marginBottom: 32, maxWidth: 500 }}
+          >
+            B.Tech CSE student at JGEC (Batch 2028). I build performant,
+            clean web applications end to end — with strong roots in algorithms
+            and a passion for great user experiences.
+          </motion.p>
 
-              <motion.div
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 1.0, type: 'spring', stiffness: 200 }}
-                className="absolute -top-4 -right-4 glass-card px-3 py-2 text-xs font-semibold text-accent-purple flex items-center gap-1.5"
-              >
-                <span className="w-2 h-2 bg-accent-purple rounded-full animate-pulse" />
-                Full-Stack Dev
-              </motion.div>
-
-              <motion.div
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 1.1, type: 'spring', stiffness: 200 }}
-                className="absolute top-1/2 -right-12 glass-card px-3 py-2 text-xs font-semibold text-accent-pink flex items-center gap-1.5"
-              >
-                <span className="w-2 h-2 bg-accent-pink rounded-full animate-pulse" />
-                React / Node
-              </motion.div>
-            </div>
+          {/* CTAs */}
+          <motion.div variants={item} style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginBottom: 36 }}>
+            <a href="/resume.pdf" download className="btn-primary">
+              <Download size={14} /> Download Resume
+            </a>
+            <button className="btn-ghost" onClick={() => scrollTo('projects')}>
+              View Projects <ArrowRight size={14} />
+            </button>
           </motion.div>
-        </div>
 
-        {/* Scroll cue */}
+          {/* Socials */}
+          <motion.div variants={item} style={{ display: 'flex', gap: 24 }}>
+            {[
+              { href: 'https://github.com/anirbanshit',          Icon: Github,   label: 'GitHub' },
+              { href: 'https://www.linkedin.com/in/anirbanshit', Icon: Linkedin, label: 'LinkedIn' },
+            ].map(({ href, Icon, label }) => (
+              <motion.a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="social-link"
+                whileHover={{ y: -2, color: '#93C5FD' }}
+                transition={{ type: 'spring', stiffness: 400, damping: 20 }}
+              >
+                <Icon size={15} /> {label}
+              </motion.a>
+            ))}
+          </motion.div>
+        </motion.div>
+
+        {/* ── Code window ── */}
+        <CodeWindow />
+
+        {/* ── Scroll cue ── */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.4, duration: 0.6 }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-slate-600"
+          transition={{ delay: 2.8, duration: 0.8 }}
+          style={{ position: 'absolute', bottom: 36, left: '50%', transform: 'translateX(-50%)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}
         >
-          <span className="text-xs tracking-widest uppercase">Scroll</span>
-          <div className="w-px h-8 bg-gradient-to-b from-slate-600 to-transparent animate-bounce-slow" />
+          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.5625rem', color: '#27272A', letterSpacing: '0.14em', textTransform: 'uppercase' }}>scroll</span>
+          <motion.div
+            animate={{ scaleY: [1, 0.3, 1], opacity: [0.2, 0.6, 0.2] }}
+            transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            style={{ width: 1, height: 32, background: 'linear-gradient(to bottom, #60A5FA, transparent)', transformOrigin: 'top' }}
+          />
         </motion.div>
       </div>
     </section>

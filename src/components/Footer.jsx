@@ -1,89 +1,48 @@
-import { Github, Linkedin, Mail, Code2 } from 'lucide-react'
+import { Github, Linkedin, Mail } from 'lucide-react'
 
-const LINKS = [
-  { label: 'Home',     href: '#home' },
-  { label: 'About',    href: '#about' },
-  { label: 'Skills',   href: '#skills' },
-  { label: 'Projects', href: '#projects' },
-  { label: 'Contact',  href: '#contact' },
-]
-
-const SOCIALS = [
-  { icon: Github,   href: 'https://github.com/anirbanshit',                label: 'GitHub',   color: 'hover:text-white' },
-  { icon: Linkedin, href: 'https://www.linkedin.com/in/anirbanshit',      label: 'LinkedIn', color: 'hover:text-accent-blue' },
-  { icon: Mail,     href: 'mailto:anirbanshit77@gmail.com',               label: 'Email',    color: 'hover:text-accent-cyan' },
-]
+const NAV = ['about', 'skills', 'projects', 'contact']
+const go = href => document.getElementById(href)?.scrollIntoView({ behavior: 'smooth' })
 
 export default function Footer() {
-
-  const scrollTo = (href) => {
-    const el = document.querySelector(href)
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
-
   return (
-    <footer className="relative border-t border-white/[0.04] mt-8">
-      {/* Top glow line */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-48 h-px bg-gradient-to-r from-transparent via-accent-cyan/50 to-transparent" />
+    <footer style={{ borderTop: '1px solid #27272A', padding: '48px 0' }}>
+      <div className="container-main">
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 24 }}>
 
-      <div className="max-w-6xl mx-auto px-5 py-12">
-        <div className="grid md:grid-cols-3 gap-8 mb-10">
-
-          {/* Brand */}
-          <div>
-            <a
-              href="#home"
-              onClick={e => { e.preventDefault(); scrollTo('#home') }}
-              className="flex items-center gap-2 text-white font-bold text-lg mb-3"
-            >
-              <span className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-dark-900">
-                <Code2 size={16} strokeWidth={2.5} />
-              </span>
-              <span className="gradient-text">Anirban Shit</span>
-            </a>
-            <p className="text-slate-500 text-sm leading-relaxed max-w-xs">
-              B.Tech CSE'28 @ JGEC. Learning, building, and exploring the world of modern web development.
-            </p>
-          </div>
+          {/* Logo */}
+          <span style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.875rem', fontWeight: 600, color: '#3F3F46', letterSpacing: '-0.02em' }}>
+            ~/anirban
+          </span>
 
           {/* Nav */}
-          <div>
-            <h4 className="text-white font-semibold text-sm mb-4">Navigation</h4>
-            <ul className="space-y-2">
-              {LINKS.map(({ label, href }) => (
-                <li key={label}>
-                  <button
-                    onClick={() => scrollTo(href)}
-                    className="text-slate-500 text-sm hover:text-slate-300 transition-colors duration-200"
-                  >
-                    {label}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <nav style={{ display: 'flex', gap: 20 }}>
+            {NAV.map(id => (
+              <button key={id} onClick={() => go(id)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'JetBrains Mono, monospace', fontSize: '0.6875rem', color: '#27272A', letterSpacing: '0.05em', textTransform: 'uppercase', transition: 'color 0.15s ease', padding: 0 }}
+                onMouseEnter={e => e.currentTarget.style.color = '#3F3F46'}
+                onMouseLeave={e => e.currentTarget.style.color = '#27272A'}
+              >
+                {id}
+              </button>
+            ))}
+          </nav>
 
-          {/* Social */}
-          <div>
-            <h4 className="text-white font-semibold text-sm mb-4">Connect</h4>
-            <div className="flex flex-col gap-2">
-              {SOCIALS.map(({ icon: Icon, href, label, color }) => (
-                <a
-                  key={label}
-                  href={href}
-                  target={href.startsWith('http') ? '_blank' : undefined}
-                  rel="noopener noreferrer"
-                  className={`flex items-center gap-2 text-slate-500 text-sm transition-colors duration-200 ${color}`}
-                >
-                  <Icon size={15} />
-                  {label}
-                </a>
-              ))}
-            </div>
+          {/* Socials */}
+          <div style={{ display: 'flex', gap: 16 }}>
+            {[
+              { href: 'https://github.com/anirbanshit',          Icon: Github },
+              { href: 'https://www.linkedin.com/in/anirbanshit', Icon: Linkedin },
+              { href: 'mailto:anirbanshit77@gmail.com',          Icon: Mail },
+            ].map(({ href, Icon }) => (
+              <a key={href} href={href} target={href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer"
+                style={{ color: '#27272A', transition: 'color 0.15s ease' }}
+                onMouseEnter={e => e.currentTarget.style.color = '#3F3F46'}
+                onMouseLeave={e => e.currentTarget.style.color = '#27272A'}
+              >
+                <Icon size={15} />
+              </a>
+            ))}
           </div>
         </div>
-
-
       </div>
     </footer>
   )
