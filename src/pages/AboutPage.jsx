@@ -75,15 +75,6 @@ const SECTIONS = {
           { t: '  batch', c: 's-prop' },
           { t: ': ', c: '' },
           { t: '"2024 — 2028"', c: 's-string' },
-          { t: ',', c: '' },
-        ]
-      },
-      {
-        raw: true, content: [
-          { t: '  cgpa', c: 's-prop' },
-          { t: ': ', c: '' },
-          { t: '"pursuing"', c: 's-string' },
-          { t: ',', c: '' },
         ]
       },
       { raw: true, content: [{ t: '}', c: '' }] },

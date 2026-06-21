@@ -3,6 +3,23 @@ import SnakeGame from '../components/SnakeGame'
 
 const f = { initial: { opacity: 0, y: 18 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } }
 
+const RESUME_PATH = '/resume.pdf'
+const RESUME_FILENAME = 'Anirbanshit-Resume.pdf'
+
+const outlineBtn = {
+  padding: '8px 20px',
+  border: '1px solid #43D9AD',
+  background: 'transparent',
+  color: '#43D9AD',
+  fontFamily: 'JetBrains Mono, monospace',
+  fontSize: '0.75rem',
+  cursor: 'pointer',
+  borderRadius: 4,
+  transition: 'all 0.2s',
+  textDecoration: 'none',
+  display: 'inline-block',
+}
+
 export default function HelloPage({ onNavigate }) {
   return (
     <div style={{ flex: 1, display: 'flex', alignItems: 'center', padding: '40px 60px', gap: 60, overflow: 'hidden' }}>
@@ -47,27 +64,39 @@ export default function HelloPage({ onNavigate }) {
               "https://github.com/anirbanshit"
             </a>
           </div>
+          <div style={{ marginTop: 8 }}>// Download my resume:</div>
+          <div style={{ marginTop: 4 }}>
+            <span style={{ color: '#C778DD' }}>const </span>
+            <span style={{ color: '#5BC8F5' }}>resumeLink</span>
+            <span style={{ color: '#607B96' }}> = </span>
+            <a
+              href={RESUME_PATH}
+              download={RESUME_FILENAME}
+              style={{ color: '#43D9AD', textDecoration: 'underline', textDecorationColor: 'rgba(67,217,173,0.3)' }}
+            >
+              "{RESUME_PATH}"
+            </a>
+          </div>
         </motion.div>
 
-        <motion.div {...f} transition={{ ...f.transition, delay: 0.36 }}>
+        <motion.div {...f} transition={{ ...f.transition, delay: 0.36 }} style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
           <button
             onClick={() => onNavigate('contact')}
-            style={{
-              padding: '8px 20px',
-              border: '1px solid #43D9AD',
-              background: 'transparent',
-              color: '#43D9AD',
-              fontFamily: 'JetBrains Mono, monospace',
-              fontSize: '0.75rem',
-              cursor: 'pointer',
-              borderRadius: 4,
-              transition: 'all 0.2s',
-            }}
+            style={outlineBtn}
             onMouseEnter={e => e.currentTarget.style.background = 'rgba(67,217,173,0.08)'}
             onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
           >
             contact-me
           </button>
+          <a
+            href={RESUME_PATH}
+            download={RESUME_FILENAME}
+            style={outlineBtn}
+            onMouseEnter={e => e.currentTarget.style.background = 'rgba(67,217,173,0.08)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+          >
+            download-resume
+          </a>
         </motion.div>
       </div>
 
