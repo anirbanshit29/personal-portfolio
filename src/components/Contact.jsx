@@ -1,6 +1,8 @@
-import { useState } from 'react'
-import { motion } from 'framer-motion'
-import { Mail, Linkedin, Github, MapPin, Send, CheckCircle } from 'lucide-react'
+import { useState, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Mail, Linkedin, Github, MapPin, Send, CheckCircle, AlertCircle } from 'lucide-react'
+import { validateContactForm, validateName, validateEmail, validateMessage } from '../utils/validateContact'
+import { sendContactEmail } from '../services/emailService'
 
 const f = (delay = 0) => ({
   initial: { opacity: 0, y: 16 },
@@ -19,19 +21,63 @@ const LINKS = [
 const FIELD_LABEL = { fontFamily: 'JetBrains Mono, monospace', fontSize: '0.6875rem', color: '#3F3F46', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8, display: 'block' }
 
 export default function Contact() {
-  const [form, setForm] = useState({ name: '', email: '', subject: '', message: '' })
-  const [status, setStatus] = useState('idle')
+  const [form, setForm]       = useState({ name: '', email: '', message: '' })
+  const [errors, setErrors]   = useState({ name: '', email: '', message: '' })
+  const [touched, setTouched] = useState({ name: false, email: false, message: false })
+  const [status, setStatus]   = useState('idle') // idle | sending | done | error
 
-  const handle = e => setForm(f => ({ ...f, [e.target.name]: e.target.value }))
-  const submit = e => {
-    e.preventDefault()
-    setStatus('sending')
-    setTimeout(() => {
-      setStatus('done')
-      setForm({ name: '', email: '', subject: '', message: '' })
-      setTimeout(() => setStatus('idle'), 4500)
-    }, 1400)
+  /* ── Field validators (for onBlur) ── */
+  const validators = {
+    name:    validateName,
+    email:   validateEmail,
+    message: validateMessage,
   }
+
+  const handleChange = useCallback((e) => {
+    const { name, value } = e.target
+    setForm(f => ({ ...f, [name]: value }))
+    if (touched[name]) {
+      setErrors(prev => ({ ...prev, [name]: validators[name](value) }))
+    }
+  }, [touched])
+
+  const handleBlur = useCallback((e) => {
+    const { name, value } = e.target
+    setTouched(prev => ({ ...prev, [name]: true }))
+    setErrors(prev => ({ ...prev, [name]: validators[name](value) }))
+  }, [])
+
+  const submit = useCallback(async (e) => {
+    e.preventDefault()
+
+    const { isValid, errors: validationErrors } = validateContactForm(form)
+    setErrors(validationErrors)
+    setTouched({ name: true, email: true, message: true })
+
+    if (!isValid) return
+
+    setStatus('sending')
+
+    const result = await sendContactEmail(form)
+
+    if (result.success) {
+      setStatus('done')
+      setForm({ name: '', email: '', message: '' })
+      setTouched({ name: false, email: false, message: false })
+      setErrors({ name: '', email: '', message: '' })
+      setTimeout(() => setStatus('idle'), 5000)
+    } else {
+      setStatus('error')
+      setTimeout(() => setStatus('idle'), 5000)
+    }
+  }, [form])
+
+  const clearForm = useCallback(() => {
+    setForm({ name: '', email: '', message: '' })
+    setErrors({ name: '', email: '', message: '' })
+    setTouched({ name: false, email: false, message: false })
+    setStatus('idle')
+  }, [])
 
   return (
     <section id="contact" className="section">
@@ -85,39 +131,123 @@ export default function Contact() {
         <motion.form
           {...f(0.16)}
           onSubmit={submit}
+          noValidate
           style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
         >
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            {/* Name */}
             <label>
               <span style={FIELD_LABEL}>Name *</span>
-              <input id="contact-name" name="name" required value={form.name} onChange={handle} placeholder="Your name" className="field" />
+              <input
+                id="contact-name"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                placeholder="Your name"
+                autoComplete="name"
+                className={`field${touched.name && errors.name ? ' has-error' : ''}`}
+              />
+              <AnimatePresence>
+                {touched.name && errors.name && (
+                  <motion.p
+                    key="name-err"
+                    className="contact-error"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                  >
+                    {errors.name}
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </label>
+            {/* Email */}
             <label>
               <span style={FIELD_LABEL}>Email *</span>
-              <input id="contact-email" name="email" type="email" required value={form.email} onChange={handle} placeholder="you@email.com" className="field" />
+              <input
+                id="contact-email"
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                placeholder="you@email.com"
+                autoComplete="email"
+                className={`field${touched.email && errors.email ? ' has-error' : ''}`}
+              />
+              <AnimatePresence>
+                {touched.email && errors.email && (
+                  <motion.p
+                    key="email-err"
+                    className="contact-error"
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                  >
+                    {errors.email}
+                  </motion.p>
+                )}
+              </AnimatePresence>
             </label>
           </div>
 
-          <label>
-            <span style={FIELD_LABEL}>Subject</span>
-            <input id="contact-subject" name="subject" value={form.subject} onChange={handle} placeholder="What's this about?" className="field" />
-          </label>
-
+          {/* Message */}
           <label>
             <span style={FIELD_LABEL}>Message *</span>
-            <textarea id="contact-message" name="message" rows={5} required value={form.message} onChange={handle} placeholder="Tell me about your project or opportunity..." className="field" style={{ resize: 'none' }} />
+            <textarea
+              id="contact-message"
+              name="message"
+              rows={5}
+              value={form.message}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              placeholder="Tell me about your project or opportunity..."
+              className={`field${touched.message && errors.message ? ' has-error' : ''}`}
+              style={{ resize: 'none' }}
+            />
+            <AnimatePresence>
+              {touched.message && errors.message && (
+                <motion.p
+                  key="msg-err"
+                  className="contact-error"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                >
+                  {errors.message}
+                </motion.p>
+              )}
+            </AnimatePresence>
           </label>
 
-          {status === 'done' && (
-            <motion.div
-              initial={{ opacity: 0, y: -8 }}
-              animate={{ opacity: 1, y: 0 }}
-              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', borderRadius: 8, background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.2)', color: '#4ADE80', fontSize: '0.875rem', fontWeight: 500 }}
-            >
-              <CheckCircle size={14} />
-              Message sent. I'll get back to you soon.
-            </motion.div>
-          )}
+          {/* Toast Notifications */}
+          <AnimatePresence mode="wait">
+            {status === 'done' && (
+              <motion.div
+                key="toast-done"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', borderRadius: 8, background: 'rgba(74,222,128,0.06)', border: '1px solid rgba(74,222,128,0.2)', color: '#4ADE80', fontSize: '0.875rem', fontWeight: 500 }}
+              >
+                <CheckCircle size={14} />
+                ✅ Your message has been sent successfully. I'll get back to you soon.
+              </motion.div>
+            )}
+            {status === 'error' && (
+              <motion.div
+                key="toast-error"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -8 }}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 16px', borderRadius: 8, background: 'rgba(244,112,103,0.06)', border: '1px solid rgba(244,112,103,0.2)', color: '#F47067', fontSize: '0.875rem', fontWeight: 500 }}
+              >
+                <AlertCircle size={14} />
+                ❌ Failed to send message. Please try again later.
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           <div style={{ display: 'flex', gap: 10 }}>
             <button
@@ -128,21 +258,17 @@ export default function Contact() {
             >
               {status === 'sending' ? (
                 <>
-                  <span style={{ width: 13, height: 13, border: '2px solid rgba(0,0,0,0.25)', borderTopColor: '#09090B', borderRadius: '50%', animation: 'spin 0.65s linear infinite', display: 'inline-block' }} />
-                  Sending…
+                  <span className="send-spinner" />
+                  {' Sending…'}
                 </>
               ) : (
                 <><Send size={13} /> Send Message</>
               )}
             </button>
-            <button type="reset" onClick={() => setForm({ name: '', email: '', subject: '', message: '' })} className="btn-ghost">
+            <button type="button" onClick={clearForm} className="btn-ghost">
               Clear
             </button>
           </div>
-
-          <p style={{ fontFamily: 'JetBrains Mono, monospace', fontSize: '0.625rem', color: '#27272A', letterSpacing: '0.04em' }}>
-            // form is static — connect Formspree or EmailJS for real delivery
-          </p>
         </motion.form>
 
       </div>
