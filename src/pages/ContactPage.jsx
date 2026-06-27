@@ -14,7 +14,7 @@ export default function ContactPage() {
 
   const SOCIAL = [
     { label: 'LinkedIn', href: 'https://www.linkedin.com/in/anirbanshit', icon: '↗' },
-    { label: 'GitHub',   href: 'https://github.com/anirbanshit',          icon: '↗' },
+    { label: 'GitHub',   href: 'https://github.com/anirbanshit29',        icon: '↗' },
   ]
 
   /* ── Field validators (for onBlur) ── */

@@ -56,12 +56,12 @@ export default function HelloPage({ onNavigate }) {
             <span style={{ color: '#5BC8F5' }}>githubLink</span>
             <span style={{ color: '#607B96' }}> = </span>
             <a
-              href="https://github.com/anirbanshit"
+              href="https://github.com/anirbanshit29"
               target="_blank"
               rel="noopener noreferrer"
               style={{ color: '#43D9AD', textDecoration: 'underline', textDecorationColor: 'rgba(67,217,173,0.3)' }}
             >
-              "https://github.com/anirbanshit"
+              "https://github.com/anirbanshit29"
             </a>
           </div>
           <div style={{ marginTop: 8 }}>// Download my resume:</div>

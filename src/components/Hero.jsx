@@ -195,7 +195,7 @@ export default function Hero() {
           {/* Socials */}
           <motion.div variants={item} style={{ display: 'flex', gap: 24 }}>
             {[
-              { href: 'https://github.com/anirbanshit',          Icon: Github,   label: 'GitHub' },
+              { href: 'https://github.com/anirbanshit29',        Icon: Github,   label: 'GitHub' },
               { href: 'https://www.linkedin.com/in/anirbanshit', Icon: Linkedin, label: 'LinkedIn' },
             ].map(({ href, Icon, label }) => (
               <motion.a

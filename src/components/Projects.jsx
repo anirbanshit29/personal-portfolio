@@ -192,13 +192,13 @@ export default function Projects() {
             <h2 className="section-heading">Selected Work</h2>
           </div>
           <motion.a
-            href="https://github.com/anirbanshit"
+            href="https://github.com/anirbanshit29"
             target="_blank" rel="noopener noreferrer"
             whileHover={{ x: 4, color: '#71717A' }}
             transition={{ type: 'spring', stiffness: 400, damping: 22 }}
             style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: 'JetBrains Mono, monospace', fontSize: '0.75rem', color: '#27272A', textDecoration: 'none' }}
           >
-            github.com/anirbanshit <ArrowUpRight size={12} />
+            github.com/anirbanshit29 <ArrowUpRight size={12} />
           </motion.a>
         </motion.div>
 

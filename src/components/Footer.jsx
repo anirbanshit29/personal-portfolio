@@ -29,7 +29,7 @@ export default function Footer() {
           {/* Socials */}
           <div style={{ display: 'flex', gap: 16 }}>
             {[
-              { href: 'https://github.com/anirbanshit',          Icon: Github },
+              { href: 'https://github.com/anirbanshit29',        Icon: Github },
               { href: 'https://www.linkedin.com/in/anirbanshit', Icon: Linkedin },
               { href: 'mailto:anirbanshit77@gmail.com',          Icon: Mail },
             ].map(({ href, Icon }) => (

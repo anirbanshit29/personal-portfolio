@@ -14,7 +14,7 @@ const f = (delay = 0) => ({
 const LINKS = [
   { icon: Mail,     label: 'Email',    value: 'anirbanshit77@gmail.com',          href: 'mailto:anirbanshit77@gmail.com' },
   { icon: Linkedin, label: 'LinkedIn', value: 'linkedin.com/in/anirbanshit',       href: 'https://www.linkedin.com/in/anirbanshit' },
-  { icon: Github,   label: 'GitHub',   value: 'github.com/anirbanshit',            href: 'https://github.com/anirbanshit' },
+  { icon: Github,   label: 'GitHub',   value: 'github.com/anirbanshit29',          href: 'https://github.com/anirbanshit29' },
   { icon: MapPin,   label: 'Location', value: 'Kolkata, West Bengal',              href: null },
 ]
 
